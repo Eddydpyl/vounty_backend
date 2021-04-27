@@ -21,7 +21,9 @@ class ImageSerializerField(serializers.Field):
             url = parse.unquote(data)
             path = 'https://storage.googleapis.com/' + GS_BUCKET_NAME + '/'
             if url.startswith(path):
-                return url[len(path):]
+                try: end = url.index('?')
+                except ValueError: end = -1
+                return url[len(path):end]
             raise ValueError()
         except Exception as e:
             return data

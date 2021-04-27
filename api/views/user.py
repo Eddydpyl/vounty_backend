@@ -24,6 +24,15 @@ class UserDetails(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+    def perform_update(self, serializer):
+        if 'image' in serializer.validated_data:
+            serializer.instance.delete()
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        instance.image.delete()
+        instance.delete()
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

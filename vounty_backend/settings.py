@@ -1,4 +1,5 @@
 import os
+import base64
 import dotenv
 
 from pathlib import Path
@@ -204,7 +205,7 @@ GS_CREDENTIALS = service_account.Credentials.from_service_account_info({
     'type': 'service_account',
     'project_id': os.environ.get('GS_PROJECT_ID'),
     'private_key_id': os.environ.get('GS_PRIVATE_KEY_ID'),
-    'private_key': os.environ.get('GS_PRIVATE_KEY'),
+    'private_key': base64.b64decode(os.environ.get('GS_PRIVATE_KEY')).decode('utf-8').replace('\\n', '\n'),
     'client_email': os.environ.get('GS_CLIENT_EMAIL'),
     'client_id': os.environ.get('GS_CLIENT_ID'),
     'auth_uri': 'https://accounts.google.com/o/oauth2/auth',

@@ -1,4 +1,3 @@
-from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from rest_framework import serializers
 from urllib import parse
@@ -24,7 +23,7 @@ class ImageSerializerField(serializers.Field):
             if url.startswith(path):
                 return url[len(path):]
             raise ValueError()
-        except ValidationError as e:
+        except Exception as e:
             return data
 
 

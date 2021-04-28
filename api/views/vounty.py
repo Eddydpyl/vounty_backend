@@ -24,7 +24,7 @@ class VountyList(generics.ListCreateAPIView):
     filter_backends = [DjangoFilterBackend,
                        filters.SearchFilter,
                        filters.OrderingFilter]
-    filter_fields = ['featured', 'tags__id']
+    filter_fields = ['user__id', 'featured', 'tags__id']
     search_fields = ['title', 'subtitle']
     ordering_fields = ['fund_count', 'date', 'prize']
     ordering = 'date'

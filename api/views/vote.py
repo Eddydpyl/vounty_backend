@@ -1,15 +1,15 @@
 import datetime
 
 from rest_framework import generics
-from rest_framework.permissions import IsAdminUser
 
 from api.pagination import StandardPagination
+from api.permissions import SafeMethods
 from api.serializers import VoteSerializer
 from api.models import Vote
 
 
 class VoteList(generics.ListCreateAPIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [SafeMethods]
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer
     pagination_class = StandardPagination
@@ -20,6 +20,6 @@ class VoteList(generics.ListCreateAPIView):
 
 
 class VoteDetails(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [SafeMethods]
     queryset = Vote.objects.all()
     serializer_class = VoteSerializer

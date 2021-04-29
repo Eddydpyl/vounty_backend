@@ -1,18 +1,24 @@
 import datetime
 
-from rest_framework import generics
-from rest_framework.permissions import IsAdminUser
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, filters
 
 from api.pagination import StandardPagination
+from api.permissions import SafeMethods
 from api.serializers import FundSerializer
 from api.models import Fund, Vounty
 
 
 class FundList(generics.ListCreateAPIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [SafeMethods]
     queryset = Fund.objects.all()
     serializer_class = FundSerializer
     pagination_class = StandardPagination
+    filter_backends = [DjangoFilterBackend,
+                       filters.OrderingFilter]
+    filter_fields = ['user__id', 'vounty__id']
+    ordering_fields = ['date', 'amount']
+    ordering = 'date'
 
     def perform_create(self, serializer):
         date = datetime.datetime.utcnow()
@@ -27,7 +33,7 @@ class FundList(generics.ListCreateAPIView):
 
 
 class FundDetails(generics.RetrieveUpdateDestroyAPIView):
-    permission_classes = [IsAdminUser]
+    permission_classes = [SafeMethods]
     queryset = Fund.objects.all()
     serializer_class = FundSerializer
 

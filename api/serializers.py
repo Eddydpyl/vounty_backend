@@ -1,9 +1,7 @@
-from django.core.validators import URLValidator
 from rest_framework import serializers
-from urllib import parse
 
 from api.models import User, Tag, Vote, Vounty, Entry, Comment, Fund
-from vounty_backend.settings import GS_BUCKET_NAME
+from api.utils import handle_image
 
 
 class RelatedFieldAlternative(serializers.PrimaryKeyRelatedField):
@@ -33,17 +31,7 @@ class ImageSerializerField(serializers.Field):
         return value.url
 
     def to_internal_value(self, data):
-        try:
-            URLValidator(data)
-            url = parse.unquote(data)
-            path = 'https://storage.googleapis.com/' + GS_BUCKET_NAME + '/'
-            if url.startswith(path):
-                try: end = url.index('?')
-                except ValueError: end = -1
-                return url[len(path):end]
-            raise ValueError()
-        except Exception as e:
-            return data
+        return handle_image(data)
 
 
 class UserSerializer(serializers.ModelSerializer):

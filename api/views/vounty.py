@@ -14,6 +14,7 @@ from api.pagination import StandardPagination
 from api.permissions import SafeMethods
 from api.serializers import VountySerializer
 from api.models import Vounty, Fund, Tag
+from api.utils import handle_image
 
 
 class VountyList(generics.ListCreateAPIView):
@@ -62,7 +63,7 @@ def start_vounty(request):
 
     title = request.data.get('title')
     subtitle = request.data.get('subtitle')
-    image = request.data.get('image')
+    image = handle_image(request.data.get('image'))
     date = datetime.datetime.utcnow()
 
     vounty = Vounty(user=request.user, title=title, subtitle=subtitle,

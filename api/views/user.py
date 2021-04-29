@@ -26,7 +26,7 @@ class UserDetails(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         if 'image' in serializer.validated_data:
-            serializer.instance.delete()
+            serializer.instance.image.delete()
         serializer.save()
 
     def perform_destroy(self, instance):

@@ -39,6 +39,15 @@ class VountyDetails(generics.RetrieveUpdateDestroyAPIView):
     queryset = Vounty.objects.all()
     serializer_class = VountySerializer
 
+    def perform_update(self, serializer):
+        if 'image' in serializer.validated_data:
+            serializer.instance.image.delete()
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        instance.image.delete()
+        instance.delete()
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

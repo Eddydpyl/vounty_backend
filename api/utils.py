@@ -1,3 +1,5 @@
+import bleach
+
 from urllib import parse
 
 from django.core.validators import URLValidator
@@ -17,3 +19,8 @@ def handle_image(data):
         raise ValueError()
     except Exception:
         return data
+
+
+def sanitize(text):
+    return bleach.clean(text, tags=['h1', 'h2', 'h3', 'p', 'strong', 'em', 's', 'u', 'a', 'blockquote',
+                                    'ul', 'ol', 'li', 'i', 'code', 'acronym', 'abbr', 'b', 'hr'])

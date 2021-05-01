@@ -10,6 +10,7 @@ from api.pagination import StandardPagination
 from api.permissions import IsOwnerOrReadOnly
 from api.serializers import EntrySerializer
 from api.models import Entry, Vote
+from api.utils import sanitize
 
 
 class EntryList(generics.ListCreateAPIView):
@@ -25,13 +26,22 @@ class EntryList(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         date = datetime.datetime.utcnow()
-        serializer.save(date=date)
+        if 'text' in serializer.validated_data:
+            text = sanitize(serializer.validated_data['text'])
+            serializer.save(text=text, date=date)
+        else: serializer.save(date=date)
 
 
 class EntryDetails(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerOrReadOnly]
     queryset = Entry.objects.all()
     serializer_class = EntrySerializer
+
+    def perform_update(self, serializer):
+        if 'text' in serializer.validated_data:
+            text = sanitize(serializer.validated_data['text'])
+            serializer.save(text=text)
+        else: serializer.save()
 
 
 @api_view(['POST'])

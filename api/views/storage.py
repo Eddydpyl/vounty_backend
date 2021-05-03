@@ -18,7 +18,7 @@ def storage_url(request):
 
     bucket = client.bucket('vounty-storage')
     blob = bucket.blob('image/' + date.isoformat())
+    getter = blob.generate_signed_url(expiration=expiration, method='GET', version='v4')
     setter = blob.generate_signed_url(expiration=expiration, method='PUT', version='v4')
-    getter = blob.public_url
 
     return JsonResponse({'getter': getter, 'setter': setter})

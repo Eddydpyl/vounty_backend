@@ -14,6 +14,7 @@ from api.pagination import StandardPagination
 from api.permissions import SafeMethods
 from api.serializers import VountySerializer
 from api.models import Vounty, Fund, Tag
+from api.utils import handle_image, sanitize
 
 
 class VountyList(generics.ListCreateAPIView):
@@ -24,20 +25,35 @@ class VountyList(generics.ListCreateAPIView):
     filter_backends = [DjangoFilterBackend,
                        filters.SearchFilter,
                        filters.OrderingFilter]
-    filter_fields = ['featured', 'tags__id']
+    filter_fields = ['user__id', 'featured', 'tags__id']
     search_fields = ['title', 'subtitle']
     ordering_fields = ['fund_count', 'date', 'prize']
     ordering = 'date'
 
     def perform_create(self, serializer):
         date = datetime.datetime.utcnow()
-        serializer.save(date=date)
+        if 'description' in serializer.validated_data:
+            description = sanitize(serializer.validated_data['description'])
+            serializer.save(description=description, date=date)
+        else: serializer.save(date=date)
 
 
 class VountyDetails(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [SafeMethods]
     queryset = Vounty.objects.all()
     serializer_class = VountySerializer
+
+    def perform_update(self, serializer):
+        if 'image' in serializer.validated_data:
+            serializer.instance.image.delete()
+        if 'description' in serializer.validated_data:
+            description = sanitize(serializer.validated_data['description'])
+            serializer.save(description=description)
+        else: serializer.save()
+
+    def perform_destroy(self, instance):
+        instance.image.delete()
+        instance.delete()
 
 
 @api_view(['POST'])
@@ -53,11 +69,13 @@ def start_vounty(request):
 
     title = request.data.get('title')
     subtitle = request.data.get('subtitle')
-    image = request.data.get('image')
+    description = sanitize(request.data.get('description'))
+    image = handle_image(request.data.get('image'))
     date = datetime.datetime.utcnow()
 
     vounty = Vounty(user=request.user, title=title, subtitle=subtitle,
-                    image=image, fund_count=1, date=date, prize=amount)
+                    description=description, image=image, fund_count=1,
+                    date=date, prize=amount)
     vounty.save()
 
     tags = request.data.get('tags')

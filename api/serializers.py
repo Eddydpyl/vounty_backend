@@ -1,10 +1,24 @@
-from django.core.exceptions import ValidationError
-from django.core.validators import URLValidator
 from rest_framework import serializers
-from urllib import parse
 
 from api.models import User, Tag, Vote, Vounty, Entry, Comment, Fund
-from vounty_backend.settings import GS_BUCKET_NAME
+from api.utils import handle_image
+
+
+class RelatedFieldAlternative(serializers.PrimaryKeyRelatedField):
+    def __init__(self, **kwargs):
+        self.serializer = kwargs.pop('serializer', None)
+        if self.serializer is not None and not issubclass(self.serializer, serializers.Serializer):
+            raise TypeError('"serializer" is not a valid serializer class')
+
+        super().__init__(**kwargs)
+
+    def use_pk_only_optimization(self):
+        return False if self.serializer else True
+
+    def to_representation(self, instance):
+        if self.serializer:
+            return self.serializer(instance, context=self.context).data
+        return super().to_representation(instance)
 
 
 class ImageSerializerField(serializers.Field):
@@ -17,31 +31,22 @@ class ImageSerializerField(serializers.Field):
         return value.url
 
     def to_internal_value(self, data):
-        try:
-            URLValidator(data)
-            url = parse.unquote(data)
-            path = 'https://storage.googleapis.com/' + GS_BUCKET_NAME + '/'
-            if url.startswith(path):
-                return url[len(path):]
-            raise ValueError()
-        except ValidationError as e:
-            return data
+        return handle_image(data)
 
 
 class UserSerializer(serializers.ModelSerializer):
-    image = ImageSerializerField()
+    image = ImageSerializerField(required=False)
 
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'password', 'image', 'about']
         extra_kwargs = {
-            'password': {'write_only': True},
-            'image': {'required': False},
-            'about': {'required': False}
+            'email': {'write_only': True},
+            'password': {'write_only': True}
         }
 
     def create(self, validated_data):
-        user = super(UserSerializer, self).create(validated_data)
+        user = User(username=validated_data['username'], email=validated_data['email'])
         user.set_password(validated_data['password'])
         user.save()
         return user
@@ -54,19 +59,18 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class VoteSerializer(serializers.ModelSerializer):
+    user = RelatedFieldAlternative(queryset=User.objects.all(), serializer=UserSerializer)
+
     class Meta:
         model = Vote
-        fields = ['id', 'user', 'content_type', 'object_id', 'content_object', 'date', 'like']
+        fields = ['id', 'user', 'date', 'like']
         read_only_fields = ['date']
-        extra_kwargs = {
-            'content_type': {'write_only': True},
-            'object_id': {'write_only': True}
-        }
 
 
 class VountySerializer(serializers.ModelSerializer):
+    user = RelatedFieldAlternative(queryset=User.objects.all(), serializer=UserSerializer)
     tags = TagSerializer(read_only=True, many=True)
-    image = ImageSerializerField()
+    image = ImageSerializerField(required=False)
 
     class Meta:
         model = Vounty
@@ -79,16 +83,9 @@ class VountySerializer(serializers.ModelSerializer):
         }
 
 
-class EntrySerializer(serializers.ModelSerializer):
-    votes = VoteSerializer(read_only=True, many=True)
-
-    class Meta:
-        model = Entry
-        fields = ['id', 'user', 'vounty', 'votes', 'vote_count', 'granted', 'date', 'text']
-        read_only_fields = ['votes', 'vote_count', 'granted', 'date']
-
-
 class CommentSerializer(serializers.ModelSerializer):
+    user = RelatedFieldAlternative(queryset=User.objects.all(), serializer=UserSerializer)
+    vounty = RelatedFieldAlternative(queryset=Vounty.objects.all(), serializer=VountySerializer)
     votes = VoteSerializer(read_only=True, many=True)
 
     class Meta:
@@ -97,7 +94,21 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ['votes', 'vote_count', 'date']
 
 
+class EntrySerializer(serializers.ModelSerializer):
+    user = RelatedFieldAlternative(queryset=User.objects.all(), serializer=UserSerializer)
+    vounty = RelatedFieldAlternative(queryset=Vounty.objects.all(), serializer=VountySerializer)
+    votes = VoteSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Entry
+        fields = ['id', 'user', 'vounty', 'votes', 'vote_count', 'granted', 'date', 'text']
+        read_only_fields = ['votes', 'vote_count', 'granted', 'date']
+
+
 class FundSerializer(serializers.ModelSerializer):
+    user = RelatedFieldAlternative(queryset=User.objects.all(), serializer=UserSerializer)
+    vounty = RelatedFieldAlternative(queryset=Vounty.objects.all(), serializer=VountySerializer)
+
     class Meta:
         model = Fund
         fields = ['id', 'user', 'vounty', 'date', 'amount', 'charge']

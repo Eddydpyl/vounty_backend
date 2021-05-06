@@ -27,7 +27,8 @@ class VountyList(generics.ListCreateAPIView):
                        filters.OrderingFilter]
     filter_fields = ['user__id', 'featured', 'tags__id']
     search_fields = ['title', 'subtitle']
-    ordering_fields = ['fund_count', 'date', 'prize']
+    ordering_fields = ['comment_count', 'entry_count',
+                       'fund_count', 'date', 'prize']
     ordering = 'date'
 
     def perform_create(self, serializer):

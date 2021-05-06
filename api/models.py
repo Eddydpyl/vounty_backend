@@ -29,6 +29,8 @@ class Vounty(models.Model):
     description = models.TextField(default='', blank=True)
     image = models.ImageField(upload_to='image', null=True, blank=True)
     featured = models.BooleanField(default=False, db_index=True)
+    comment_count = models.IntegerField(default=0, db_index=True)
+    entry_count = models.IntegerField(default=0, db_index=True)
     fund_count = models.IntegerField(default=0, db_index=True)
     date = models.DateTimeField(db_index=True)
     prize = models.FloatField(default=0.0, db_index=True)

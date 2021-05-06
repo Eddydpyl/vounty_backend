@@ -74,9 +74,9 @@ class VountySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Vounty
-        fields = ['id', 'user', 'title', 'subtitle', 'description',
-                  'image', 'featured', 'fund_count', 'date', 'prize', 'tags']
-        read_only_fields = ['featured', 'fund_count', 'date', 'prize', 'tags']
+        fields = ['id', 'user', 'title', 'subtitle', 'description', 'image', 'featured',
+                  'comment_count', 'entry_count', 'fund_count', 'date', 'prize', 'tags']
+        read_only_fields = ['featured', 'comment_count', 'entry_count', 'fund_count', 'date', 'prize', 'tags']
         extra_kwargs = {
             'description': {'required': False},
             'image': {'required': False}

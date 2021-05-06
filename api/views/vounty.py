@@ -3,6 +3,7 @@ import json
 import os
 
 import stripe
+from django.core.mail import mail_admins
 
 from django.http import JsonResponse
 from rest_framework import generics, filters
@@ -14,7 +15,7 @@ from api.pagination import StandardPagination
 from api.permissions import SafeMethods
 from api.serializers import VountySerializer
 from api.models import Vounty, Fund, Tag
-from api.utils import handle_image, sanitize
+from api.utils import handle_image, sanitize, send_email
 
 
 class VountyList(generics.ListCreateAPIView):
@@ -88,6 +89,10 @@ def start_vounty(request):
                 amount=amount, charge=json.dumps(charge))
     fund.save()
 
+    # While there are few users in the platform, keep tabs on everything.
+    message = 'A new vounty has been created!\n\nCheck it out: https://vounty.io/vounty?id=' + str(vounty.id)
+    mail_admins('New Activity in Vounty', message, fail_silently=True)
+
     serializer = VountySerializer(vounty)
     return JsonResponse(serializer.data)
 
@@ -114,5 +119,6 @@ def fund_vounty(request):
                 amount=amount, charge=json.dumps(charge))
     fund.save()
 
+    send_email(vounty, request.user, 2, None)
     serializer = VountySerializer(vounty)
     return JsonResponse(serializer.data)

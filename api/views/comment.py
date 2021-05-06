@@ -9,7 +9,8 @@ from rest_framework import generics, filters
 from api.pagination import StandardPagination
 from api.permissions import IsOwnerOrReadOnly
 from api.serializers import CommentSerializer
-from api.models import Comment, Vote, Vounty
+from api.models import Comment, Vote, Vounty, User
+from api.utils import send_email
 
 
 class CommentList(generics.ListCreateAPIView):
@@ -31,6 +32,11 @@ class CommentList(generics.ListCreateAPIView):
         vounty = Vounty.objects.get(id=vounty_id)
         vounty.comment_count += 1
         vounty.save()
+
+        text = serializer.validated_data['text']
+        user_id = serializer.validated_data['user'].id
+        user = User.objects.get(id=user_id)
+        send_email(vounty, user, 0, text)
 
 
 class CommentDetails(generics.RetrieveUpdateDestroyAPIView):

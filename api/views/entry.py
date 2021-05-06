@@ -9,8 +9,8 @@ from rest_framework import generics, filters
 from api.pagination import StandardPagination
 from api.permissions import IsOwnerOrReadOnly
 from api.serializers import EntrySerializer
-from api.models import Entry, Vote, Vounty
-from api.utils import sanitize
+from api.models import Entry, Vote, Vounty, User
+from api.utils import sanitize, send_email
 
 
 class EntryList(generics.ListCreateAPIView):
@@ -35,6 +35,11 @@ class EntryList(generics.ListCreateAPIView):
         vounty = Vounty.objects.get(id=vounty_id)
         vounty.entry_count += 1
         vounty.save()
+
+        text = serializer.validated_data['text']
+        user_id = serializer.validated_data['user'].id
+        user = User.objects.get(id=user_id)
+        send_email(vounty, user, 1, text)
 
 
 class EntryDetails(generics.RetrieveUpdateDestroyAPIView):

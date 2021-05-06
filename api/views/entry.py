@@ -9,7 +9,7 @@ from rest_framework import generics, filters
 from api.pagination import StandardPagination
 from api.permissions import IsOwnerOrReadOnly
 from api.serializers import EntrySerializer
-from api.models import Entry, Vote
+from api.models import Entry, Vote, Vounty
 from api.utils import sanitize
 
 
@@ -31,6 +31,11 @@ class EntryList(generics.ListCreateAPIView):
             serializer.save(text=text, date=date)
         else: serializer.save(date=date)
 
+        vounty_id = serializer.validated_data['vounty'].id
+        vounty = Vounty.objects.get(id=vounty_id)
+        vounty.entry_count += 1
+        vounty.save()
+
 
 class EntryDetails(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerOrReadOnly]
@@ -42,6 +47,11 @@ class EntryDetails(generics.RetrieveUpdateDestroyAPIView):
             text = sanitize(serializer.validated_data['text'])
             serializer.save(text=text)
         else: serializer.save()
+
+    def perform_destroy(self, instance):
+        instance.vounty.entry_count -= 1
+        instance.vounty.save()
+        instance.delete()
 
 
 @api_view(['POST'])

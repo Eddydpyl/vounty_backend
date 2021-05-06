@@ -9,7 +9,7 @@ from rest_framework import generics, filters
 from api.pagination import StandardPagination
 from api.permissions import IsOwnerOrReadOnly
 from api.serializers import CommentSerializer
-from api.models import Comment, Vote
+from api.models import Comment, Vote, Vounty
 
 
 class CommentList(generics.ListCreateAPIView):
@@ -27,11 +27,21 @@ class CommentList(generics.ListCreateAPIView):
         date = datetime.datetime.utcnow()
         serializer.save(date=date)
 
+        vounty_id = serializer.validated_data['vounty'].id
+        vounty = Vounty.objects.get(id=vounty_id)
+        vounty.comment_count += 1
+        vounty.save()
+
 
 class CommentDetails(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsOwnerOrReadOnly]
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+
+    def perform_destroy(self, instance):
+        instance.vounty.comment_count -= 1
+        instance.vounty.save()
+        instance.delete()
 
 
 @api_view(['POST'])

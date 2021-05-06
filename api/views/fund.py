@@ -24,7 +24,7 @@ class FundList(generics.ListCreateAPIView):
         date = datetime.datetime.utcnow()
         serializer.save(date=date)
 
-        vounty_id = serializer.validated_data['vounty']['id']
+        vounty_id = serializer.validated_data['vounty'].id
         amount = serializer.validated_data['amount']
         vounty = Vounty.objects.get(id=vounty_id)
         vounty.fund_count += 1

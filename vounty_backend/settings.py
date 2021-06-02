@@ -26,19 +26,22 @@ if not DEBUG:
 
     CSRF_USE_SESSIONS = True
 
-    EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND')
 
-    EMAIL_HOST = os.environ.get('EMAIL_HOST')
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND')
 
-    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS').lower() in ['true', '1']
+EMAIL_HOST = os.environ.get('EMAIL_HOST')
 
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT'))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS').lower() in ['true', '1']
 
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT'))
 
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
 
-    ADMINS = [('Eddydpyl', 'eddydpyl@vounty.io')]
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+
+DEFAULT_FROM_EMAIL = 'Vounty <admin@vounty.io>'
+
+ADMINS = [('Eddydpyl', 'eddydpyl@vounty.io')]
 
 
 SECRET_KEY = os.environ.get('SECRET_KEY')

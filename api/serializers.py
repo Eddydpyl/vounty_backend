@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from api.models import User, Tag, Vote, Vounty, Entry, Comment, Fund
+from api.models import User, Tag, Vote, Vounty, Entry, Comment, Fund, Subscription
 from api.utils import handle_image
 
 
@@ -74,13 +74,12 @@ class VountySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Vounty
-        fields = ['id', 'user', 'title', 'subtitle', 'description', 'image', 'featured',
-                  'comment_count', 'entry_count', 'fund_count', 'date', 'prize', 'tags']
-        read_only_fields = ['featured', 'comment_count', 'entry_count', 'fund_count', 'date', 'prize', 'tags']
-        extra_kwargs = {
-            'description': {'required': False},
-            'image': {'required': False}
-        }
+        fields = ['id', 'user', 'title', 'subtitle', 'description',
+                  'image', 'featured', 'comment_count', 'entry_count',
+                  'fund_count', 'date', 'prize', 'reddit', 'tags']
+        read_only_fields = ['featured', 'comment_count', 'entry_count',
+                            'fund_count', 'date', 'prize', 'reddit', 'tags']
+        optional_fields = ['description', 'image']
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -113,6 +112,13 @@ class FundSerializer(serializers.ModelSerializer):
         model = Fund
         fields = ['id', 'user', 'vounty', 'date', 'amount', 'charge']
         read_only_fields = ['date']
-        extra_kwargs = {
-            'charge': {'required': False}
-        }
+        optional_fields = ['charge']
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    user = RelatedFieldAlternative(queryset=User.objects.all(), serializer=UserSerializer)
+    vounty = RelatedFieldAlternative(queryset=Vounty.objects.all(), serializer=VountySerializer)
+
+    class Meta:
+        model = Subscription
+        fields = ['id', 'user', 'vounty', 'new_comment', 'new_entry', 'new_fund']

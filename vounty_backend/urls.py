@@ -35,6 +35,9 @@ urlpatterns = [
     path('fund/', views.FundList.as_view()),
     path('fund/<int:pk>/', views.FundDetails.as_view()),
 
+    path('subscription/', views.SubscriptionList.as_view()),
+    path('subscription/<int:pk>/', views.SubscriptionDetails.as_view()),
+
     path('storage/', views.storage_url),
 ]
 

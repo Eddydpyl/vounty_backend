@@ -2,6 +2,7 @@ import datetime
 import json
 import os
 
+import praw
 import stripe
 from django.core.mail import mail_admins
 
@@ -14,8 +15,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from api.pagination import StandardPagination
 from api.permissions import SafeMethods
 from api.serializers import VountySerializer
-from api.models import Vounty, Fund, Tag
+from api.models import Vounty, Fund, Tag, Subscription
 from api.utils import handle_image, sanitize, send_email
+from vounty_backend.settings import DEBUG
 
 
 class VountyList(generics.ListCreateAPIView):
@@ -85,9 +87,22 @@ def start_vounty(request):
         tag = Tag.objects.get(id=tag_id)
         vounty.tags.add(tag)
 
-    fund = Fund(user=request.user, vounty=vounty, date=date,
-                amount=amount, charge=json.dumps(charge))
-    fund.save()
+    Fund(user=request.user, vounty=vounty, date=date,
+         amount=amount, charge=json.dumps(charge)).save()
+
+    Subscription(user=request.user, vounty=vounty, new_comment=True,
+                 new_entry=True, new_fund=True).save()
+
+    if not DEBUG and 'REDDIT_CLIENT_ID' in os.environ:
+        url = 'https://vounty.io/vounty?id=' + str(vounty.id)
+        reddit = praw.Reddit(client_id=os.environ.get('REDDIT_CLIENT_ID'),
+                             client_secret=os.environ.get('REDDIT_CLIENT_SECRET'),
+                             user_agent=os.environ.get('REDDIT_USERAGENT'),
+                             username=os.environ.get('REDDIT_USERNAME'),
+                             password=os.environ.get('REDDIT_PASSWORD'))
+        response = reddit.subreddit('Vounty').submit(vounty.title, url=url)
+        vounty.reddit = 'https://www.reddit.com' + response.permalink
+        vounty.save()
 
     # While there are few users in the platform, keep tabs on everything.
     message = 'A new vounty has been created!\n\nCheck it out: https://vounty.io/vounty?id=' + str(vounty.id)
@@ -115,10 +130,12 @@ def fund_vounty(request):
     vounty.save()
 
     date = datetime.datetime.utcnow()
-    fund = Fund(user=request.user, vounty=vounty, date=date,
-                amount=amount, charge=json.dumps(charge))
-    fund.save()
+    Fund(user=request.user, vounty=vounty, date=date,
+         amount=amount, charge=json.dumps(charge)).save()
 
-    send_email(vounty, request.user, 2, None)
+    subscriptions = Subscription.objects.filter(vounty=vounty, new_fund=True)
+    subject = 'Someone has contributed some money to a vounty you\'re subscribed to!'
+    send_email(vounty, request.user, subscriptions, subject, None)
+
     serializer = VountySerializer(vounty)
     return JsonResponse(serializer.data)

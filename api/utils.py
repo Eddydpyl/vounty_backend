@@ -5,7 +5,6 @@ from urllib import parse
 from django.core.mail import mail_admins, send_mass_mail
 from django.core.validators import URLValidator
 
-from api.models import Fund, Comment, Entry
 from vounty_backend.settings import GS_BUCKET_NAME
 
 
@@ -28,27 +27,13 @@ def sanitize(text):
                                     'ul', 'ol', 'li', 'i', 'code', 'acronym', 'abbr', 'b', 'hr'])
 
 
-def send_email(vounty, user, type, text):
-    subject = 'Someone commented in a vounty you\'re subscribed to!' if type == 0 else \
-        'Someone submitted an entry in a vounty you\'re subscribed to!' if type == 1 else \
-        'Someone has contributed some money to a vounty you\'re subscribed to!'
-    intro = user.username + ' wrote:\n\n' + text + '\n\n' if type < 2 else ''
+def send_email(vounty, user, subscriptions, subject, text):
+    intro = user.username + ' wrote:\n\n' + text + '\n\n' if text is not None else ''
     message = intro + 'Check it out: https://vounty.io/vounty?id=' + str(vounty.id)
 
     emails = []
-    user_id = [user.id]
-    for comment in Comment.objects.filter(vounty_id=vounty.id):
-        if comment.user.id in user_id: continue
-        emails.append((subject, message, None, [comment.user.email]))
-        user_id.append(comment.user.id)
-    for entry in Entry.objects.filter(vounty_id=vounty.id):
-        if entry.user.id in user_id: continue
-        emails.append((subject, message, None, [entry.user.email]))
-        user_id.append(entry.user.id)
-    for fund in Fund.objects.filter(vounty_id=vounty.id):
-        if fund.user.id in user_id: continue
-        emails.append((subject, message, None, [fund.user.email]))
-        user_id.append(fund.user.id)
+    for subscription in subscriptions:
+        emails.append((subject, message, None, [subscription.user.email]))
     send_mass_mail(emails, fail_silently=True)
 
     # While there are few users in the platform, keep tabs on everything.

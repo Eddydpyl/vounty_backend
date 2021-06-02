@@ -9,7 +9,7 @@ from rest_framework import generics, filters
 from api.pagination import StandardPagination
 from api.permissions import IsOwnerOrReadOnly
 from api.serializers import EntrySerializer
-from api.models import Entry, Vote, Vounty, User
+from api.models import Entry, Vote, Vounty, User, Subscription
 from api.utils import sanitize, send_email
 
 
@@ -39,7 +39,10 @@ class EntryList(generics.ListCreateAPIView):
         text = serializer.validated_data['text']
         user_id = serializer.validated_data['user'].id
         user = User.objects.get(id=user_id)
-        send_email(vounty, user, 1, text)
+
+        subscriptions = Subscription.objects.filter(vounty=vounty, new_entry=True)
+        subject = 'Someone submitted an entry in a vounty you\'re subscribed to!'
+        send_email(vounty, user, subscriptions, subject, text)
 
 
 class EntryDetails(generics.RetrieveUpdateDestroyAPIView):

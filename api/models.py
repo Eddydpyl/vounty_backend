@@ -34,6 +34,7 @@ class Vounty(models.Model):
     fund_count = models.IntegerField(default=0, db_index=True)
     date = models.DateTimeField(db_index=True)
     prize = models.FloatField(default=0.0, db_index=True)
+    reddit = models.TextField(default='', blank=True)
     tags = models.ManyToManyField(Tag)
 
 
@@ -62,3 +63,11 @@ class Fund(models.Model):
     date = models.DateTimeField(db_index=True)
     amount = models.FloatField(db_index=True)
     charge = models.TextField(default='', blank=True)
+
+
+class Subscription(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    vounty = models.ForeignKey(Vounty, on_delete=models.CASCADE, null=True)
+    new_comment = models.BooleanField(default=False)
+    new_entry = models.BooleanField(default=False)
+    new_fund = models.BooleanField(default=False)

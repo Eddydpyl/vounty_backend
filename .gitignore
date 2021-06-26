@@ -1,9 +1,27 @@
+# Local environment files
 .env
 venv
-.idea
+
+# Local database files
 db.sqlite3
 
-# Elastic Beanstalk Files
+# IntelliJ project files
+*.iml
+*.iws
+*.ipr
+.idea/
+
+# Eclipse project files
+.settings/
+.classpath
+.project
+
+# Visual Studio Code project files
+*.code-workspace
+.history/
+.vscode/
+
+# Elastic Beanstalk files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
